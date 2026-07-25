@@ -3,7 +3,7 @@ import torch
 import cv2
 from PIL import Image
 from flask import Flask, render_template, request
-from transformers import AutoModelForImageClassification, AutoFeatureExtractor
+from transformers import AutoModelForImageClassification, AutoImageProcessor
 
 app = Flask(__name__)
 
@@ -12,7 +12,7 @@ MODEL_PATH = "final_swin_deepfake_model"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = AutoModelForImageClassification.from_pretrained(MODEL_PATH).to(device)
-processor = AutoFeatureExtractor.from_pretrained(MODEL_PATH)
+processor = AutoImageProcessor.from_pretrained(MODEL_PATH)
 model.eval()
 
 # Face Detector
@@ -23,6 +23,9 @@ def index():
     if request.method == 'POST':
         file = request.files['image']
         if file:
+            # static ஃபோல்டர் இல்லை என்றால் உருவாக்குவதற்கு
+            os.makedirs('static', exist_ok=True)
+            
             filepath = os.path.join('static', file.filename)
             file.save(filepath)
 
@@ -55,4 +58,6 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # Render Dynamic Port Binding
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
